@@ -3,23 +3,24 @@ const FakeUrgency = {
   tipo: DP_TYPES.URGENCY,
   detectados: new Set(),
   check: function() {
-    const elementos = document.getElementsByClassName("tabular-nums");// es la clase de los elementos con timmers
-    const padres= Array.from(elementos).map(e => e.parentElement);
-    console.log(padres);
-    const elemenFormat = padres.flatMap(p => {
-      return Array.from(p.children)
-          .map(c => {
-              if (c.innerText === undefined) return null;
-              return {
-                  text: c.innerText.trim().replace(/\t/g, " "), 
-                  path: XPATHINTERPRETER.getPath(c, document.body)?.[0]
-              };
-          })
-          .filter(e => e !== null && e.text && e.text.length > 0);
-    });
-    console.log("FakeUrgency-Check" ,elemenFormat);
+    let elements_urgency = segments(document.body);
+    let filtered_elements_urgency = [];
 
-    chrome.runtime.sendMessage({ pattern: this.tipo, data: elemenFormat }, (response) => {
+    for (let i = 0; i < elements_urgency.length; i++) {
+        if (elements_urgency[i].innerText === undefined) {
+            continue;
+        }
+        let text = elements_urgency[i].innerText.trim().replace(/\t/g, " ");
+        if (text.length == 0) {
+            continue;
+        }
+        let path = XPATHINTERPRETER.getPath(elements_urgency[i], document.body)?.[0];
+        filtered_elements_urgency.push({ text, path });
+    }
+
+    console.log("FakeUrgency-Check", filtered_elements_urgency);
+
+    chrome.runtime.sendMessage({ pattern: this.tipo, data: filtered_elements_urgency }, (response) => {
       const { error, data } = response;
       if (error) {
         if (error.code === "ERR_NETWORK") console.log("El servidor no responde.");
