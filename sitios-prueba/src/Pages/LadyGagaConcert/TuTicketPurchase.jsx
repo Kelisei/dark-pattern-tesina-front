@@ -59,7 +59,7 @@ export const TuTicketPurchase = () => {
       if (selectedId === 'platea_san_martin_alta') {
         setSelectedId(null);
       }
-    }, 5500); // Se agota la barata
+    }, 35000); // Se agota la barata mucho más tarde (35 seg)
 
     const timer3 = setTimeout(() => {
       setVisionLateralStatus('soldout');
