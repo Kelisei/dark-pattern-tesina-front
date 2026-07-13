@@ -22,6 +22,10 @@ const sites = [
     name: 'Air somewhere',
     url: '/check_in',
   },
+  {
+    name: 'TuTicket',
+    url: '/tuticket',
+  },
 ];
 
 export const Home = () => {

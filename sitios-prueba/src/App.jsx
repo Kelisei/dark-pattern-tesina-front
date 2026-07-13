@@ -29,6 +29,11 @@ import { CreateWebsiteGroup } from './Pages/Dashboard/CreateWebsiteGroup';
 import { WebsitesPage } from './Pages/Dashboard/WebsitesPage';
 import { EditWebsiteGroup } from './Pages/Dashboard/EditWebsiteGroup';
 import { CartPage } from './Pages/EBook/CartPage';
+import { TuTicketHome } from './Pages/LadyGagaConcert/TuTicketHome';
+import { TuTicketQueue } from './Pages/LadyGagaConcert/TuTicketQueue';
+import { TuTicketPurchase } from './Pages/LadyGagaConcert/TuTicketPurchase';
+import { TuTicketParking } from './Pages/LadyGagaConcert/TuTicketParking';
+import { TuTicketPayment } from './Pages/LadyGagaConcert/TuTicketPayment';
 
 function App() {
   useEffect(() => {
@@ -67,6 +72,12 @@ function App() {
             <Route path="/ebook/books_offer" element={<BooksOffer />} />
             <Route path="/ebook/cart" element={<CartPage />} />
           </Route>
+
+          <Route path="/tuticket" element={<TuTicketHome />} />
+          <Route path="/tuticket/queue" element={<TuTicketQueue />} />
+          <Route path="/tuticket/purchase" element={<TuTicketPurchase />} />
+          <Route path="/tuticket/parking" element={<TuTicketParking />} />
+          <Route path="/tuticket/payment" element={<TuTicketPayment />} />
         </Routes>
       </BrowserRouter>
     </>

@@ -6,7 +6,7 @@ export const FinishedTask = ({ show }) => {
   const { t } = useTranslation();
 
   const closeTab = () => {
-    window.close();
+    window.location.href = '/';
   };
 
   if (!show) {

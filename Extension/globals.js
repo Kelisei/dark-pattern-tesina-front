@@ -29,6 +29,15 @@ const DP_COLORS = {
   SCARCITY: 'FFFF00' // #FFFF00
 }
 
+const DP_NAMES = {
+  SHAMING: 'Confirm Shaming',
+  URGENCY: 'Fake Urgency',
+  SCARCITY: 'Fake Scarcity',
+  HIDDENCOST: 'Hidden Costs',
+  MISDIRECTION: 'Misdirection',
+  PRESELECTION: 'Preselection'
+};
+
 /**
  * 
  * @param {Element} elemento 
@@ -36,22 +45,20 @@ const DP_COLORS = {
  * @returns 
  */
 function resaltarBorde(elemento, tipo) {
-  // Chequeo simple para saber si ya fue resaltado
-  if (elemento == undefined || elemento.classList.contains(tipo)) return;
+  if (elemento == undefined) return;
   
-  // console.log("Resaltando borde:", elemento, "Tipo:", tipo);
-  
-  // Aplica el estilo al borde del elemento
-  elemento.style.border = `3px dashed #${DP_COLORS[tipo]}`;
   elemento.classList.add(tipo);
+  
+  // Si tiene múltiples tipos de DP, usamos un color violeta de combinación, si no, el del tipo actual
+  const tiposActivos = Object.values(DP_TYPES).filter(t => elemento.classList.contains(t));
+  let color = DP_COLORS[tipo];
+  if (tiposActivos.length > 1) {
+    color = '8b5cf6'; // Violeta vibrante para multipatrones
+  }
+  
+  elemento.style.outline = `3px dashed #${color}`;
+  elemento.style.outlineOffset = '-3px';
 }
-
-/**
- * 
- * @param {Element} elemento 
- * @param {string} tipo Usar DP_TYPES para no tener errores
- * @returns 
- */
 
 // Función para obtener un selector único para un elemento
 function getUniqueSelector(elemento) {
@@ -72,6 +79,8 @@ function getUniqueSelector(elemento) {
 }
 
 function resaltarElementoConTexto(elemento, tipo) {
+  if (elemento == undefined) return;
+  
   let ignoreList = [];
   try {
     ignoreList = JSON.parse(localStorage.getItem('ignoreDP')) || [];
@@ -83,106 +92,118 @@ function resaltarElementoConTexto(elemento, tipo) {
     console.info("Elemento ignorado: ", elemento, "Tipo: " + tipo);
     return;
   }
-  if (elemento == undefined || elemento.classList.contains(tipo)) return;
 
-  // console.info("Resaltando elemento: ", elemento, "Tipo: " + tipo);
-  
   resaltarBorde(elemento, tipo);
-  elemento.style.position = 'relative'; // Para posicionar el globo correctamente
+  elemento.style.position = 'relative';
 
-  // Chequea si ya existe un globo de texto para el elemento
-  // Si no existe, lo crea.
-  let globoTexto = null;
-  Array.from(elemento.childNodes).forEach((child) => {
-    if (child.classList && child.classList.contains('resaltado-dark-pattern')) {
-      globoTexto = child;
-    }
-  });
+  // Buscar si ya existe el globo
+  let globoTexto = Array.from(elemento.childNodes).find(child => child.classList && child.classList.contains('resaltado-dark-pattern'));
   
   if (!globoTexto) {
     globoTexto = document.createElement('span');
     globoTexto.classList.add('resaltado-dark-pattern');
+    
+    // Estilos iniciales del globo
+    Object.assign(globoTexto.style, {
+      position: 'absolute',
+      left: '0',
+      zIndex: '10000',
+      padding: '10px',
+      color: 'black',
+      borderRadius: '5px',
+      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
+      fontSize: '13px',
+      whiteSpace: 'normal',
+      minWidth: '170px',
+      textAlign: 'left',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+    });
   }
 
-  // Agrega texto al globo
-  const p = document.createElement('p');
-  p.textContent = DP_TEXT[tipo];
-  p.style.width = '100%';
-  p.style.lineHeight = '1.5';
-  p.style.margin = '0'; // Agregar para evitar márgenes por defecto
-  globoTexto.appendChild(p);
-
-  // Crea el botón de cerrar (la cruz)
-  const botonCerrar = document.createElement('span');
-  botonCerrar.innerHTML = '&times;'; // El símbolo de la cruz (×)
-  Object.assign(botonCerrar.style, {
-    cursor: 'pointer',
-    color: 'black',
-    fontWeight: 'bold',
-    fontSize: '30px',
-  });
-
-  // Función para cerrar el globo
-  botonCerrar.addEventListener('click', function () {
-    
-    const respuesta = confirm("¿Queres que este caso no se detecte más?");
-    // Si el usuario confirma, se elimina el resaltado y se guarda en localStorage para no detectarlo más
-    if (respuesta) {
-      // Quitar borde y clase solo de este tipo
-      elemento.style.border = '';
-      elemento.classList.remove(tipo);
-      // Eliminar el globo de texto
-      if (globoTexto.parentNode === elemento) {
-        elemento.removeChild(globoTexto);
-      }
-
-      // Traigo la lista de ignorados del localStorage
-      let ignoreList = [];
-      try {
-        ignoreList = JSON.parse(localStorage.getItem('ignoreDP')) || [];
-      } catch (e) {
-        ignoreList = [];
-      }
-      const selector = getUniqueSelector(elemento);
-      ignoreList.push(selector);
-      // Guardar la lista de ignorados en localStorage
-      localStorage.setItem('ignoreDP', JSON.stringify(ignoreList));
-    } else {
-      // Solo cierra el globo, pero deja el resaltado
-      globoTexto.removeChild(p);
-      globoTexto.removeChild(botonCerrar);
-      if (!globoTexto.hasChildNodes()) elemento.removeChild(globoTexto);
-    }
-  })
+  // Si tiene múltiples tipos activos, usamos fondo violeta/morado, si no, el del tipo
+  const tiposActivos = Object.values(DP_TYPES).filter(t => elemento.classList.contains(t));
+  let colorBg = DP_COLORS[tipo];
+  if (tiposActivos.length > 1) {
+    colorBg = 'c084fc'; // Violeta pastel para el fondo del globo
+  }
+  globoTexto.style.backgroundColor = `#${colorBg}`;
   
+  // Remover botón de cerrar anterior si existe
+  let botonCerrar = globoTexto.querySelector('.resaltado-close-btn');
+  if (botonCerrar) {
+    globoTexto.removeChild(botonCerrar);
+  } else {
+    botonCerrar = document.createElement('span');
+    botonCerrar.classList.add('resaltado-close-btn');
+    botonCerrar.innerHTML = '&times;';
+    Object.assign(botonCerrar.style, {
+      cursor: 'pointer',
+      color: 'black',
+      fontWeight: 'bold',
+      fontSize: '22px',
+      alignSelf: 'flex-end',
+      lineHeight: '1',
+      marginTop: '-4px',
+    });
+    
+    botonCerrar.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const respuesta = confirm("¿Querés que este elemento no se detecte más?");
+      if (respuesta) {
+        // Quitar clases y estilos de todos los tipos activos
+        tiposActivos.forEach(t => elemento.classList.remove(t));
+        elemento.style.outline = '';
+        elemento.style.outlineOffset = '';
+        if (globoTexto.parentNode === elemento) {
+          elemento.removeChild(globoTexto);
+        }
 
+        // Agregar selector único a la ignoreList
+        let ignoreList = [];
+        try {
+          ignoreList = JSON.parse(localStorage.getItem('ignoreDP')) || [];
+        } catch (err) {
+          ignoreList = [];
+        }
+        const selector = getUniqueSelector(elemento);
+        ignoreList.push(selector);
+        localStorage.setItem('ignoreDP', JSON.stringify(ignoreList));
+      }
+    });
+  }
+
+  // Verificar si ya existe el párrafo para este tipo de DP
+  let parrafoExistente = globoTexto.querySelector(`p[data-dp-type="${tipo}"]`);
+  if (!parrafoExistente) {
+    parrafoExistente = document.createElement('p');
+    parrafoExistente.setAttribute('data-dp-type', tipo);
+    parrafoExistente.style.margin = '0';
+    parrafoExistente.style.lineHeight = '1.4';
+    parrafoExistente.innerHTML = `<strong>${DP_NAMES[tipo]}:</strong> ${DP_TEXT[tipo]}`;
+    
+    // Si ya hay otros párrafos, podemos añadir una pequeña línea divisoria superior
+    if (globoTexto.querySelectorAll('p').length > 0) {
+      parrafoExistente.style.borderTop = '1px solid rgba(0, 0, 0, 0.15)';
+      parrafoExistente.style.paddingTop = '6px';
+      parrafoExistente.style.marginTop = '4px';
+    }
+    
+    globoTexto.appendChild(parrafoExistente);
+  }
+
+  // Ajustar la posición vertical del globo basándose en el elemento
   const rect = elemento.getBoundingClientRect();
+  globoTexto.style.top = `${rect.height}px`;
 
-  Object.assign(globoTexto.style, {
-    position: 'absolute',
-    top: `${rect.height}px`, // Ajusta para que el globo aparezca arriba del elemento
-    left: '0',
-    zIndex: '10000', // Asegurar que esté por encima de otros elementos
-    padding: '10px',
-    backgroundColor: `#${DP_COLORS[tipo]}`,
-    color: 'black',
-    borderRadius: '5px',
-    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
-    fontSize: '14px',
-    whiteSpace: 'normal',
-    minWidth: '120px', // Para que haya espacio para el botón de cerrar
-    textAlign: 'center',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '16px',
-  });
-
-  // Añadir el botón de cerrar al globo
+  // Asegurar que el botón de cerrar esté al final del globo
   globoTexto.appendChild(botonCerrar);
 
-  // Agrega el globo como hijo del elemento
-  elemento.appendChild(globoTexto);
+  // Asegurar que el globo esté agregado al elemento
+  if (globoTexto.parentNode !== elemento) {
+    elemento.appendChild(globoTexto);
+  }
 }
 
 /**
@@ -190,22 +211,51 @@ function resaltarElementoConTexto(elemento, tipo) {
  * @param {string} tipo Patrón a desresaltar
  */
 function desresaltarElementoConTipo(tipo) {
-  // console.log("Desresaltando elementos del tipo:", tipo);
-  
-  // Buscar todos los elementos que fueron resaltados con este tipo
   const elementos = document.querySelectorAll(`.${tipo}`);
   
   elementos.forEach((elemento) => {
-    // Quitar borde y clase
-    elemento.style.border = '';
     elemento.classList.remove(tipo);
-
-    // Buscar y eliminar el globo de texto relacionado
-    const hijos = Array.from(elemento.children);
-    hijos.forEach((hijo) => {
-      if (hijo.classList && hijo.classList.contains('resaltado-dark-pattern')) {
-        elemento.removeChild(hijo);
+    
+    // Verificar si quedan otros tipos de DP activos en el elemento
+    const tiposActivosRestantes = Object.values(DP_TYPES).filter(t => elemento.classList.contains(t));
+    
+    if (tiposActivosRestantes.length > 0) {
+      // Si todavía quedan otros patrones, actualizar el borde/outline con los colores restantes
+      let color = DP_COLORS[tiposActivosRestantes[0]];
+      if (tiposActivosRestantes.length > 1) {
+        color = '8b5cf6';
       }
-    });
+      elemento.style.outline = `3px dashed #${color}`;
+      
+      // Buscar el globo de texto y eliminar el párrafo de este tipo
+      let globoTexto = Array.from(elemento.childNodes).find(child => child.classList && child.classList.contains('resaltado-dark-pattern'));
+      if (globoTexto) {
+        let parrafo = globoTexto.querySelector(`p[data-dp-type="${tipo}"]`);
+        if (parrafo) {
+          globoTexto.removeChild(parrafo);
+        }
+        
+        // Si ya no quedan párrafos de texto (solo el botón de cerrar), eliminar el globo
+        if (globoTexto.querySelectorAll('p').length === 0) {
+          elemento.removeChild(globoTexto);
+        } else {
+          // Actualizar el color de fondo del globo con los restantes
+          let colorBg = DP_COLORS[tiposActivosRestantes[0]];
+          if (tiposActivosRestantes.length > 1) {
+            colorBg = 'c084fc';
+          }
+          globoTexto.style.backgroundColor = `#${colorBg}`;
+        }
+      }
+    } else {
+      // Si no quedan tipos activos, quitar el outline y el globo completo
+      elemento.style.outline = '';
+      elemento.style.outlineOffset = '';
+      
+      let globoTexto = Array.from(elemento.childNodes).find(child => child.classList && child.classList.contains('resaltado-dark-pattern'));
+      if (globoTexto && globoTexto.parentNode === elemento) {
+        elemento.removeChild(globoTexto);
+      }
+    }
   });
 }

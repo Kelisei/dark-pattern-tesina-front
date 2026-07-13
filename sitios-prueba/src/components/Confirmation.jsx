@@ -4,7 +4,7 @@ import confirmation from '../assets/CarRental/confirmation.png';
 export const Confirmation = () => {
   const { t } = useTranslation();
   const closeTab = () => {
-    window.close();
+    window.location.href = '/';
   };
   return (
     <div className="w-full mx-auto text-center">

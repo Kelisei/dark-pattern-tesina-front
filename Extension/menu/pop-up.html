@@ -1,112 +1,169 @@
-<!-- archivo: menu/pantalla.html -->
+<!-- archivo: menu/pop-up.html -->
 <!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Dark Patterns</title>
+  <title>Dark Patterns Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="pop-up.css">
 </head>
 <body>
-  <h1>DARK PATTERNS</h1>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <img src="imagenes/icono.png" alt="Icono principal" class="header-logo">
+        <div class="title-sub">
+          <h1>DARK PATTERNS</h1>
+          <span class="version-label">Detector v1.1</span>
+        </div>
+      </div>
+      <!-- Status Badge -->
+      <div id="status-badge" class="status-badge offline">
+        <span class="status-dot"></span>
+        <span class="status-text">Desconectado</span>
+      </div>
+    </header>
 
-  <div class="main-icon">
-    <img src="imagenes/icono.png" alt="Icono principal">
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Options Container -->
+      <div class="options-container">
+        <div class="options-header">
+          <span class="options-title">Patrones a detectar</span>
+          <button id="toggle-all-btn" class="toggle-all-btn">Activar todos</button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-info">
+            <span class="option-name">Confirm Shaming</span>
+            <span class="option-desc">Persuasión emocional o manipulación por culpa</span>
+          </div>
+          <div class="option-actions">
+            <span class="counter zero" id="ct_SHAMING">0</span>
+            <label class="switch">
+              <input type="checkbox" id="SHAMING">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-info">
+            <span class="option-name">Fake Urgency</span>
+            <span class="option-desc">Presión por tiempo limitado o urgencia artificial</span>
+          </div>
+          <div class="option-actions">
+            <span class="counter zero" id="ct_URGENCY">0</span>
+            <label class="switch">
+              <input type="checkbox" id="URGENCY">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-info">
+            <span class="option-name">Fake Scarcity</span>
+            <span class="option-desc">Indicaciones falsas de bajo stock o alta demanda</span>
+          </div>
+          <div class="option-actions">
+            <span class="counter zero" id="ct_SCARCITY">0</span>
+            <label class="switch">
+              <input type="checkbox" id="SCARCITY">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-info">
+            <span class="option-name">Hidden Costs</span>
+            <span class="option-desc">Cargos o precios adicionales ocultos hasta el final</span>
+          </div>
+          <div class="option-actions">
+            <span class="counter zero" id="ct_HIDDENCOST">0</span>
+            <label class="switch">
+              <input type="checkbox" id="HIDDENCOST">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-info">
+            <span class="option-name">Misdirection</span>
+            <span class="option-desc">Diseño confuso para redirigir la atención del usuario</span>
+          </div>
+          <div class="option-actions">
+            <span class="counter zero" id="ct_MISDIRECTION">0</span>
+            <label class="switch">
+              <input type="checkbox" id="MISDIRECTION">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-info">
+            <span class="option-name">Preselection</span>
+            <span class="option-desc">Opciones premarcadas por defecto sin consentimiento</span>
+          </div>
+          <div class="option-actions">
+            <span class="counter zero" id="ct_PRESELECTION">0</span>
+            <label class="switch">
+              <input type="checkbox" id="PRESELECTION">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Total Row -->
+        <div class="total-bar">
+          <span class="total-label">Total detectados en pestaña</span>
+          <span class="counter total-counter zero" id="ct_total">0</span>
+        </div>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-section">
+        <h3 class="section-title">Modo de aviso en página</h3>
+        <div class="segmented-control">
+          <input type="radio" id="TODO" name="modo" value="TODO">
+          <label for="TODO" class="segment-label">
+            <span class="segment-title">Carteles + Marcado</span>
+          </label>
+          
+          <input type="radio" id="MARCA" name="modo" value="MARCA">
+          <label for="MARCA" class="segment-label">
+            <span class="segment-title">Solo marcado</span>
+          </label>
+          
+          <input type="radio" id="NADA" name="modo" value="NADA">
+          <label for="NADA" class="segment-label">
+            <span class="segment-title">Solo en pop-up</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Developer Mode Section -->
+      <div class="dev-mode-section">
+        <div class="dev-mode-row">
+          <div class="dev-info">
+            <span class="dev-title">Modo Desarrollador</span>
+            <span class="dev-desc">Detecciones separadas e individuales sin agrupar</span>
+          </div>
+          <label class="switch small-switch">
+            <input type="checkbox" id="dev-mode-chk">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <div class="options-container"></div>
-    <div class="option">
-      <span>Confirm Shaming</span>
-      <span class="counter" id="ct_SHAMING">0</span>
-      <label class="switch">
-        <input type="checkbox" id="SHAMING">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <div class="option">
-      <span>Fake Urgency</span>
-      <span class="counter" id="ct_URGENCY">0</span>
-      <label class="switch">
-        <input type="checkbox" id="URGENCY">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <div class="option">
-      <span>Fake Scarcity</span>
-      <span class="counter" id="ct_SCARCITY">0</span>
-      <label class="switch">
-        <input type="checkbox" id="SCARCITY">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <div class="option">
-      <span>Hidden cost</span>
-      <span class="counter" id="ct_HIDDENCOST">0</span>
-      <label class="switch">
-        <input type="checkbox" id="HIDDENCOST">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <div class="option">
-      <span>Misdirection</span>
-      <span class="counter" id="ct_MISDIRECTION">0</span>
-      <label class="switch">
-        <input type="checkbox" id="MISDIRECTION">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <div class="option">
-      <span>Preselection</span>
-      <span class="counter" id="ct_PRESELECTION">0</span>
-      <label class="switch">
-        <input type="checkbox" id="PRESELECTION">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <div class="option">
-      <span>Total detectado</span>
-      <span class="counter" id="ct_total">0</span>
-    </div>
-  </div>
-  <div style="font-family:sans-serif; padding:10px;">
-    <span style="display:block; font-weight:bold; margin-bottom:10px; font-size:14px; color:#ffffff;">
-      Modo de aviso
-    </span>
-  
-    <label style="display:flex; align-items:center; margin-bottom:8px; cursor:pointer; font-size:13px; color:#cccccc;">
-      <input type="radio" id="TODO" name="modo" value="TODO"
-        style="appearance:none; -webkit-appearance:none; width:16px; height:16px; border:2px solid #cccccc; border-radius:50%; margin-right:8px; cursor:pointer; position:relative;">
-      <span>Carteles + Marcado</span>
-    </label>
-  
-    <label style="display:flex; align-items:center; margin-bottom:8px; cursor:pointer; font-size:13px; color:#cccccc;">
-      <input type="radio" id="MARCA" name="modo" value="MARCA"
-        style="appearance:none; -webkit-appearance:none; width:16px; height:16px; border:2px solid #cccccc; border-radius:50%; margin-right:8px; cursor:pointer; position:relative;">
-      <span>Solo marcado</span>
-    </label>
-  
-    <label style="display:flex; align-items:center; margin-bottom:8px; cursor:pointer; font-size:13px; color:#cccccc;">
-      <input type="radio" id="NADA" name="modo" value="NADA"
-        style="appearance:none; -webkit-appearance:none; width:16px; height:16px; border:2px solid #cccccc; border-radius:50%; margin-right:8px; cursor:pointer; position:relative;">
-      <span>Solo en este pop up</span>
-    </label>
-  </div>
-
-  <div class="bottom-icons">
-    <div class="icon-item">
-      <img src="imagenes/configuracion.png" alt="Configuración" width="40">
-    </div>
-    <div class="icon-item">
-      <img src="imagenes/quienes-somos.png" alt="Quiénes somos" width="40">
-    </div>
-  </div>
-
-  <script src="pop-up.js"> 
-
-  </script>
+  <script src="pop-up.js"></script>
 </body>
 </html>

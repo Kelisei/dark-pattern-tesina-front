@@ -8,52 +8,69 @@ const DP_TYPES = {
   PRESELECTION: 'PRESELECTION'
 }
 
-//inicializo los dps en true
+// Inicializo los DPs activos en true por defecto
 chrome.runtime.onInstalled.addListener(() => {
   const valoresPorDefecto = {
-    SHAMING: false,
-    URGENCY: false,
-    HIDDENCOST: false,
-    PRESELECTION: false,
-    MISDIRECTION: false,
-    SCARCITY: false
+    SHAMING: true,
+    URGENCY: true,
+    HIDDENCOST: true,
+    PRESELECTION: true,
+    MISDIRECTION: true,
+    SCARCITY: true
   };
   const modoSeleccionado = "TODO";
-  chrome.storage.sync.set({ dpActivos: valoresPorDefecto, modoSeleccionado: modoSeleccionado }, () => {
+  chrome.storage.sync.set({ dpActivos: valoresPorDefecto, modoSeleccionado: modoSeleccionado, modoDev: false }, () => {
     console.info("Valores por defecto de DP activos guardados.");
   });
 });
 
 // Listener para mensajes entrantes desde otras partes de la extensión
+// Listener único para todos los mensajes entrantes de la extensión
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Código comentado para cargar constantes desde un mensaje, se puede habilitar si es necesario
-   if (message.tipo === "CONSTANTES") {
-      DP_TYPES = message.DP_TYPES;
-      console.info("Constantes cargadas.");
-      sendResponse();
-    }
+  if (message.tipo === "CONSTANTES") {
+    sendResponse();
+    return false;
+  }
 
-  // Maneja el mensaje cuando se seleccionan Dark Patterns en la popup
   if (message.tipo === "DARK_PATTERNS_SELECTED") {
-    sendMessageCurrentTab(
-      {
-        tipo: "ACTUALIZAR_DP",
-      });
+    sendMessageCurrentTab({ tipo: "ACTUALIZAR_DP" });
     sendResponse({ status: "Ok" });
+    return false;
   }
 
   if (message.tipo === "MODO_AVISO") {
-    sendMessageCurrentTab({tipo: "MODO_AVISO"});
+    sendMessageCurrentTab({ tipo: "MODO_AVISO" });
     sendResponse("Ok 2");
+    return false;
+  }
+
+  // Peticiones al backend desde los scripts de detección (asíncronas)
+  if (message.pattern === DP_TYPES.SHAMING) {
+    sendRequest("http://localhost:5000/shaming", { Version: '1.0', tokens: message.data }, sendResponse);
+    return true; // Mantiene el canal abierto para respuesta asíncrona
+  } else if (message.pattern === DP_TYPES.URGENCY) {
+    sendRequest("http://localhost:5000/urgency", { version: '1.0', texts: message.data }, sendResponse);
+    return true;
+  } else if (message.pattern === DP_TYPES.SCARCITY) {
+    sendRequest("http://localhost:5000/scarcity", { version: '1.0', texts: message.data }, sendResponse);
+    return true;
   }
 });
 
 // Envía un mensaje al contenido de la pestaña actual
 function sendMessageCurrentTab(data) {
   getCurrentTab(function (tab) {
-    chrome.tabs.sendMessage(tab.id, data);
+    if (tab && tab.id) {
+      chrome.tabs.sendMessage(tab.id, data, (response) => {
+        // Silenciar error si el script de contenido no está listo en la pestaña (por ejemplo en chrome://extensions)
+        if (chrome.runtime.lastError) {
+          console.info("sendMessageCurrentTab: Pestaña no lista o no compatible con inyección.");
+        }
+      });
+    }
   });
 }
+
 
 // Obtiene la pestaña actual activa y ejecuta el callback con la información de la pestaña
 function getCurrentTab(callback) {
@@ -94,15 +111,29 @@ function sendRequest(url, data, callback) {
 }
 
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.pattern === DP_TYPES.SHAMING){
-    sendRequest("http://localhost:5000/shaming", { Version:'1.0', tokens: request.data }, sendResponse);
-  }else if (request.pattern === DP_TYPES.URGENCY){
-    console.log(request.pattern, request.data);
-    sendRequest("http://localhost:5000/urgency", { version:'1.0', texts: request.data }, sendResponse);
-  }else if (request.pattern === DP_TYPES.SCARCITY){
-    sendRequest("http://localhost:5000/scarcity", { version:'1.0', texts: request.data }, sendResponse);
+
+
+// Monitoreo de conexión al backend
+let isBackendOnline = false;
+
+async function checkBackendConnection() {
+  try {
+    const response = await fetch("http://localhost:5000/ping", { method: 'GET' });
+    const currentStatus = response.ok;
+    if (currentStatus !== isBackendOnline) {
+      isBackendOnline = currentStatus;
+      await chrome.storage.local.set({ backendOnline: isBackendOnline });
+    }
+  } catch (e) {
+    if (isBackendOnline !== false) {
+      isBackendOnline = false;
+      await chrome.storage.local.set({ backendOnline: false });
+    }
   }
-  return true;
-});
+}
+
+// Ping cada 5 segundos
+setInterval(checkBackendConnection, 5000);
+checkBackendConnection();
+
 
