@@ -72,6 +72,23 @@ function getDepthToAncestor(child, ancestor) {
   return depth;
 }
 
+function getAreaPercentage(element) {
+  if (!element) return 1;
+  const rect = element.getBoundingClientRect();
+  const windowArea = window.innerWidth * window.innerHeight;
+  return (rect.width * rect.height) / windowArea;
+}
+
+function isTooCloseToRoot(element) {
+  let depth = 0;
+  let temp = element;
+  while (temp) {
+    depth++;
+    temp = temp.parentElement;
+  }
+  return depth <= 4; // html(1), body(2), #root(3), layout(4)
+}
+
 function groupCloseElements(elements) {
   let list = elements.filter(el => el && el.parentElement);
   let changed = true;
@@ -86,16 +103,18 @@ function groupCloseElements(elements) {
         
         const lca = findLowestCommonAncestor(el1, el2);
         
-        if (lca && !['BODY', 'HTML', 'MAIN', 'SECTION', 'UL', 'OL', 'FORM', 'DL'].includes(lca.tagName)) {
+        if (lca && !['BODY', 'HTML', 'MAIN', 'SECTION', 'UL', 'OL', 'FORM', 'DL'].includes(lca.tagName) && !isTooCloseToRoot(lca)) {
           const d1 = getDepthToAncestor(el1, lca);
           const d2 = getDepthToAncestor(el2, lca);
           
           if (d1 <= 2 && d2 <= 2) {
-            // Reemplazar ambos con el LCA
-            list = list.filter((_, idx) => idx !== i && idx !== j);
-            list.push(lca);
-            changed = true;
-            break;
+            // Evitar agrupaciones que ocupen mucha pantalla (heurística)
+            if (getAreaPercentage(lca) < 0.25) {
+              list = list.filter((_, idx) => idx !== i && idx !== j);
+              list.push(lca);
+              changed = true;
+              break;
+            }
           }
         }
       }
@@ -284,8 +303,10 @@ function ejecutarDPsSeleccionados() {
       console.log("Extension>ejecutarDPsSeleccionados: activos =", activos);
       for (const tipoDP of Object.values(activos)) {
         try{
-          console.log("Extension>ejecutarDPsSeleccionados: Ejecutando check para", tipoDP);
-          DARK_PATTERNS[tipoDP].check();
+          if (DARK_PATTERNS[tipoDP]) {
+            console.log("Extension>ejecutarDPsSeleccionados: Ejecutando check para", tipoDP);
+            DARK_PATTERNS[tipoDP].check();
+          }
         } catch (e) {
           console.log("Extension>ejecutarDPsSeleccionados error: ", e);
         }
@@ -350,6 +371,14 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     }
   }
 });
+
+// Forzar una ejecución inicial temprana para evitar que el MutationObserver postergue 
+// el escaneo infinitamente mientras la página de React sigue cargando elementos.
+setTimeout(() => {
+  if (chrome.runtime && chrome.runtime.id) {
+    ejecutarDPsSeleccionados();
+  }
+}, 1000);
 
 
 
