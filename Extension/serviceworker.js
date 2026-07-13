@@ -119,16 +119,11 @@ let isBackendOnline = false;
 async function checkBackendConnection() {
   try {
     const response = await fetch("http://localhost:5000/ping", { method: 'GET' });
-    const currentStatus = response.ok;
-    if (currentStatus !== isBackendOnline) {
-      isBackendOnline = currentStatus;
-      await chrome.storage.local.set({ backendOnline: isBackendOnline });
-    }
+    isBackendOnline = response.ok;
+    await chrome.storage.local.set({ backendOnline: isBackendOnline });
   } catch (e) {
-    if (isBackendOnline !== false) {
-      isBackendOnline = false;
-      await chrome.storage.local.set({ backendOnline: false });
-    }
+    isBackendOnline = false;
+    await chrome.storage.local.set({ backendOnline: false });
   }
 }
 

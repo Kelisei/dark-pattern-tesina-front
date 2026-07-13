@@ -68,6 +68,7 @@ const Preselection = {
   },
 
   check: function () {
+    this.detectados.clear();
     // console.log("🔍 Ejecutando detección de PRESELECTION...");
 
     const preselectedElems = getPreselectedElements();
@@ -84,7 +85,10 @@ const Preselection = {
       }
 
       //resaltarElementoConTexto(target, this.tipo);
-      this.detectados.add(target);
+      const path = XPATHINTERPRETER.getPath(target, document.body)?.[0];
+      if (path) {
+        this.detectados.add(path);
+      }
     });
   },
 

@@ -26,6 +26,8 @@ const ConfirmShaming = {
       filtered_elements_shaming.push({ text:text, path:path });
     }
 
+    console.log("ConfirmShaming>check sending:", filtered_elements_shaming.length, "elements");
+
     chrome.runtime.sendMessage({ pattern: this.tipo, data: filtered_elements_shaming }, (response) => {
       const { error, data } = response;
       if (error) {
@@ -33,10 +35,34 @@ const ConfirmShaming = {
         else console.log("ConfirmShaming>check: " ,error);
       }
       else {
-        console.log("ConfirmShaming>check: ", data);
+        // console.log("ConfirmShaming>check: ", data);
+        
+        let newPaths = new Set();
         data.forEach((res) => {
-          this.detectados.add(XPATHINTERPRETER.getElementByXPath(res.path, document.body));
+          newPaths.add(res.path);
         });
+
+        // Estabilidad: Solo borrar si desapareció en 2 chequeos seguidos
+        this.missingCounts = this.missingCounts || new Map();
+        
+        for (let path of this.detectados) {
+          if (!newPaths.has(path)) {
+            let count = (this.missingCounts.get(path) || 0) + 1;
+            this.missingCounts.set(path, count);
+            if (count >= 2) {
+              this.detectados.delete(path);
+              this.missingCounts.delete(path);
+            }
+          } else {
+            this.missingCounts.delete(path);
+          }
+        }
+
+        for (let path of newPaths) {
+          this.detectados.add(path);
+          this.missingCounts.delete(path);
+        }
+
         chrome.runtime.sendMessage({tipo: "MODO_AVISO"});
       }
     });

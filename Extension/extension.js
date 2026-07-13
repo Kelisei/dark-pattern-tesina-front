@@ -86,7 +86,7 @@ function groupCloseElements(elements) {
         
         const lca = findLowestCommonAncestor(el1, el2);
         
-        if (lca && lca.tagName !== 'BODY' && lca.tagName !== 'HTML' && lca.tagName !== 'MAIN' && lca.tagName !== 'SECTION') {
+        if (lca && !['BODY', 'HTML', 'MAIN', 'SECTION', 'UL', 'OL', 'FORM', 'DL'].includes(lca.tagName)) {
           const d1 = getDepthToAncestor(el1, lca);
           const d2 = getDepthToAncestor(el2, lca);
           
@@ -112,19 +112,23 @@ function groupCloseElements(elements) {
     
     const elementosDetecciones = new Map();
     
-    // 1. Recopilar todas las detecciones por elemento
     for (const [dpNombre, boolActivo] of Object.entries(dpActivos)) {
       if (boolActivo && DARK_PATTERNS[dpNombre]) {
-        const detectadosRaw = [...DARK_PATTERNS[dpNombre].detectados];
+        const detectadosRaw = [...DARK_PATTERNS[dpNombre].detectados]
+          .map(path => XPATHINTERPRETER.getElementByXPath(path, document.body))
+          .filter(elem => elem !== null && elem !== undefined);
         const detectados = modoDev ? detectadosRaw : groupCloseElements(detectadosRaw);
         const tipo = DARK_PATTERNS[dpNombre].tipo;
         
         detectados.forEach(elem => {
           if (elem) {
-            if (!elementosDetecciones.has(elem)) {
-              elementosDetecciones.set(elem, new Set());
+            const path = XPATHINTERPRETER.getPath(elem, document.body)?.[0];
+            if (path) {
+              if (!elementosDetecciones.has(path)) {
+                elementosDetecciones.set(path, { element: elem, tipos: new Set() });
+              }
+              elementosDetecciones.get(path).tipos.add(tipo);
             }
-            elementosDetecciones.get(elem).add(tipo);
           }
         });
       }
@@ -132,18 +136,23 @@ function groupCloseElements(elements) {
     
     // 2. Fusionar detecciones anidadas (hijos dentro de padres) en modo no-dev
     if (!modoDev) {
-      const elementos = Array.from(elementosDetecciones.keys());
-      for (let i = 0; i < elementos.length; i++) {
-        for (let j = 0; j < elementos.length; j++) {
+      const paths = Array.from(elementosDetecciones.keys());
+      for (let i = 0; i < paths.length; i++) {
+        for (let j = 0; j < paths.length; j++) {
           if (i === j) continue;
-          const elA = elementos[i];
-          const elB = elementos[j];
-          if (elB.contains(elA)) {
-            const tiposA = elementosDetecciones.get(elA);
-            if (tiposA) {
-              tiposA.forEach(t => elementosDetecciones.get(elB).add(t));
-            }
-            elementosDetecciones.delete(elA);
+          const pathA = paths[i];
+          const pathB = paths[j];
+          
+          if (!elementosDetecciones.has(pathA) || !elementosDetecciones.has(pathB)) {
+            continue;
+          }
+          
+          const objA = elementosDetecciones.get(pathA);
+          const objB = elementosDetecciones.get(pathB);
+          
+          if (objB.element.contains(objA.element)) {
+            objA.tipos.forEach(t => objB.tipos.add(t));
+            elementosDetecciones.delete(pathA);
             break;
           }
         }
@@ -154,16 +163,19 @@ function groupCloseElements(elements) {
     const clasesSelector = Object.values(DP_TYPES).map(t => `.${t}`).join(',');
     const actualmenteResaltados = document.querySelectorAll(clasesSelector);
     actualmenteResaltados.forEach((elem) => {
-      if (!elementosDetecciones.has(elem)) {
+      const path = XPATHINTERPRETER.getPath(elem, document.body)?.[0];
+      if (!path || !elementosDetecciones.has(path)) {
         elem.style.outline = '';
         elem.style.outlineOffset = '';
         Object.values(DP_TYPES).forEach(t => elem.classList.remove(t));
         let globo = Array.from(elem.childNodes).find(child => child.classList && child.classList.contains('resaltado-dark-pattern'));
         if (globo) elem.removeChild(globo);
       } else {
-        const tiposNuevos = elementosDetecciones.get(elem);
+        const obj = elementosDetecciones.get(path);
+        obj.element = elem; // Actualizar con la referencia de nodo más fresca del DOM
+        
         Object.values(DP_TYPES).forEach(t => {
-          if (!tiposNuevos.has(t) && elem.classList.contains(t)) {
+          if (!obj.tipos.has(t) && elem.classList.contains(t)) {
             elem.classList.remove(t);
             let globo = Array.from(elem.childNodes).find(child => child.classList && child.classList.contains('resaltado-dark-pattern'));
             if (globo) {
@@ -178,8 +190,32 @@ function groupCloseElements(elements) {
       }
     });
 
+let countDebounceTimers = {};
+async function setCountForType(dpNombre, count) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([dpNombre], (result) => {
+      if (result[dpNombre] !== count) {
+        if (countDebounceTimers[dpNombre]) clearTimeout(countDebounceTimers[dpNombre]);
+        countDebounceTimers[dpNombre] = setTimeout(() => {
+          chrome.storage.local.set({ [dpNombre]: count }, () => {
+            resolve();
+          });
+        }, 1200);
+      } else {
+        if (countDebounceTimers[dpNombre]) {
+          clearTimeout(countDebounceTimers[dpNombre]);
+          countDebounceTimers[dpNombre] = null;
+        }
+        resolve();
+      }
+    });
+  });
+}
     // 4. Pintar / actualizar elementos detectados
-    for (const [elem, tipos] of elementosDetecciones.entries()) {
+    for (const obj of elementosDetecciones.values()) {
+      const elem = obj.element;
+      const tipos = obj.tipos;
+      
       if (modoSeleccionado === "TODO") {
         tipos.forEach(tipo => {
           resaltarElementoConTexto(elem, tipo);
@@ -202,11 +238,11 @@ function groupCloseElements(elements) {
     for (const [dpNombre, boolActivo] of Object.entries(dpActivos)) {
       if (boolActivo && DARK_PATTERNS[dpNombre]) {
         let count = 0;
-        for (const tipos of elementosDetecciones.values()) {
-          if (tipos.has(DARK_PATTERNS[dpNombre].tipo)) count++;
+        for (const obj of elementosDetecciones.values()) {
+          if (obj.tipos.has(DARK_PATTERNS[dpNombre].tipo)) count++;
         }
         await setCountForType(dpNombre, count);
-      } else {
+      } else if (DARK_PATTERNS[dpNombre]) {
         DARK_PATTERNS[dpNombre].clear();
       }
     }
@@ -281,6 +317,9 @@ const observer = new MutationObserver(function (mutation) {
     }
   });
   if (newElems) DARK_PATTERNS.PRESELECTION.init();
+  
+  // Re-pintar inmediatamente para evitar parpadeos si se reemplazaron nodos
+  PintarAnalizados();
   
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {

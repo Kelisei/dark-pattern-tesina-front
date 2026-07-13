@@ -127,7 +127,7 @@ function cantidadDestacados(contrastes, porcentaje) {
  * Evalúa lenguaje persuasivo / frase "No deseo elegir mi asiento"
  */
 function evaluarLenguaje(hijos) {
-  const patronesPersuasivos = /(continuar|aceptar|obtener|mejor opción|recomendado|no deseo elegir mi asiento)/i;
+  const patronesPersuasivos = /(continuar|aceptar|obtener|mejor opción|recomendado|no deseo elegir mi asiento|comprar|sí|si|agregar)/i;
   const patronesEvasivos = /(rechazar|cancelar|no|mantener gratis)/i;
   let score = 0;
 
@@ -149,6 +149,7 @@ const Misdirection = {
   tipo: DP_TYPES.MISDIRECTION,
   detectados: new Set(),
   check: function() {
+    this.detectados.clear();
     // console.log("Analizando misdirection...");
     const specialParents = getParentOfSpecialNodes(document.body, this.clickeables).arr;
 
@@ -160,9 +161,12 @@ const Misdirection = {
       const destacados = cantidadDestacados(contrastes, this.destacadosEncimaPromedio);
       const scoreTexto = evaluarLenguaje(hijos);
 
-      if (destacados >= hijos.length * this.umbralCantidadDestacados && scoreTexto > 0) {
+      if (destacados >= hijos.length * this.umbralCantidadDestacados && scoreTexto >= 0) {
         // resaltarElementoConTexto(parent, this.tipo);
-        this.detectados.add(parent);
+        const path = XPATHINTERPRETER.getPath(parent, document.body)?.[0];
+        if (path) {
+          this.detectados.add(path);
+        }
       }
     });
   },

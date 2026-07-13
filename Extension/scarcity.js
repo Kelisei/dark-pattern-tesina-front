@@ -29,10 +29,11 @@ const FakeScarcity = {
       }
       else {
         console.log("Scarcity>check response: ", data);
+        this.detectados.clear();
         data.instances.forEach((instancia) => {
           if (instancia.has_scarcity) {
             console.log("Scarcity>check: detected scarcity for path:", instancia.path);
-            this.detectados.add(XPATHINTERPRETER.getElementByXPath(instancia.path, document.body));
+            this.detectados.add(instancia.path);
           }
         });
         chrome.runtime.sendMessage({tipo: "MODO_AVISO"});

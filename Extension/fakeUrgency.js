@@ -27,9 +27,13 @@ const FakeUrgency = {
         else console.log(error);
       }
       else {
+        console.log("FakeUrgency>check response: ", data);
+        this.detectados.clear();
         data.urgency_instances.forEach((item) => {
-          if(item.has_urgency)
-            this.detectados.add(XPATHINTERPRETER.getElementByXPath(item.path, document.body));
+          if (item.has_urgency) {
+            console.log("FakeUrgency>check: detected urgency for path:", item.path, item.text);
+            this.detectados.add(item.path);
+          }
         });
         console.log(this.detectados);
         chrome.runtime.sendMessage({tipo: "MODO_AVISO"})

@@ -80,18 +80,6 @@ function getUniqueSelector(elemento) {
 
 function resaltarElementoConTexto(elemento, tipo) {
   if (elemento == undefined) return;
-  
-  let ignoreList = [];
-  try {
-    ignoreList = JSON.parse(localStorage.getItem('ignoreDP')) || [];
-  } catch (e) {
-    ignoreList = [];
-  }
-  const selector = getUniqueSelector(elemento);
-  if (ignoreList.includes(selector)) {
-    console.info("Elemento ignorado: ", elemento, "Tipo: " + tipo);
-    return;
-  }
 
   resaltarBorde(elemento, tipo);
   elemento.style.position = 'relative';
@@ -130,49 +118,7 @@ function resaltarElementoConTexto(elemento, tipo) {
   }
   globoTexto.style.backgroundColor = `#${colorBg}`;
   
-  // Remover botón de cerrar anterior si existe
-  let botonCerrar = globoTexto.querySelector('.resaltado-close-btn');
-  if (botonCerrar) {
-    globoTexto.removeChild(botonCerrar);
-  } else {
-    botonCerrar = document.createElement('span');
-    botonCerrar.classList.add('resaltado-close-btn');
-    botonCerrar.innerHTML = '&times;';
-    Object.assign(botonCerrar.style, {
-      cursor: 'pointer',
-      color: 'black',
-      fontWeight: 'bold',
-      fontSize: '22px',
-      alignSelf: 'flex-end',
-      lineHeight: '1',
-      marginTop: '-4px',
-    });
-    
-    botonCerrar.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const respuesta = confirm("¿Querés que este elemento no se detecte más?");
-      if (respuesta) {
-        // Quitar clases y estilos de todos los tipos activos
-        tiposActivos.forEach(t => elemento.classList.remove(t));
-        elemento.style.outline = '';
-        elemento.style.outlineOffset = '';
-        if (globoTexto.parentNode === elemento) {
-          elemento.removeChild(globoTexto);
-        }
-
-        // Agregar selector único a la ignoreList
-        let ignoreList = [];
-        try {
-          ignoreList = JSON.parse(localStorage.getItem('ignoreDP')) || [];
-        } catch (err) {
-          ignoreList = [];
-        }
-        const selector = getUniqueSelector(elemento);
-        ignoreList.push(selector);
-        localStorage.setItem('ignoreDP', JSON.stringify(ignoreList));
-      }
-    });
-  }
+  let containerNombre = globoTexto.querySelector('.resaltado-nombre');
 
   // Verificar si ya existe el párrafo para este tipo de DP
   let parrafoExistente = globoTexto.querySelector(`p[data-dp-type="${tipo}"]`);
@@ -196,9 +142,6 @@ function resaltarElementoConTexto(elemento, tipo) {
   // Ajustar la posición vertical del globo basándose en el elemento
   const rect = elemento.getBoundingClientRect();
   globoTexto.style.top = `${rect.height}px`;
-
-  // Asegurar que el botón de cerrar esté al final del globo
-  globoTexto.appendChild(botonCerrar);
 
   // Asegurar que el globo esté agregado al elemento
   if (globoTexto.parentNode !== elemento) {

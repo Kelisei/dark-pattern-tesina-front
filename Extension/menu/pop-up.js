@@ -191,13 +191,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cargar estado inicial del backend
   chrome.storage.local.get("backendOnline", (result) => {
-    updateStatusUI(result.backendOnline !== false);
+    updateStatusUI(!!result.backendOnline);
   });
 
   // Escuchar cambios de estado en storage
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === "local" && changes.backendOnline) {
-      updateStatusUI(changes.backendOnline.newValue !== false);
+      updateStatusUI(!!changes.backendOnline.newValue);
     }
   });
 });

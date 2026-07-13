@@ -114,13 +114,17 @@ const HiddenCost = {
   tipo: DP_TYPES.HIDDENCOST,
   detectados: new Set(),
   check: function() {
+    this.detectados.clear();
     const elementos = document.querySelectorAll('p,span,h5'); //Esto es temporal porque podrían aparecer precios con varios tipos de tags HTML. Estamos viendo como incluir distintos tags
     const filtrados = tachadoCheck(elementos);
     const precios = sizeCheck(filtrados);
     const hiddens = distanceCheck(precios.prices, precios.principalPrices, this.hiddenCostMaxDistance);
 
     hiddens.forEach((hiddenCost) => {
-      this.detectados.add(hiddenCost);
+      const path = XPATHINTERPRETER.getPath(hiddenCost, document.body)?.[0];
+      if (path) {
+        this.detectados.add(path);
+      }
     });
   },
   clear: function() {
