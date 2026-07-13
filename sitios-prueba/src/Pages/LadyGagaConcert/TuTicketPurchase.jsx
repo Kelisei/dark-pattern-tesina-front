@@ -15,6 +15,8 @@ export const TuTicketPurchase = () => {
   const [hasSeenSivori, setHasSeenSivori] = useState(false);
   const [prefBajaStatus, setPrefBajaStatus] = useState('available'); // will become 'soldout'
   const [prefBajaSpots, setPrefBajaSpots] = useState(1);
+  const [sanMartinStatus, setSanMartinStatus] = useState('available');
+  const [visionLateralStatus, setVisionLateralStatus] = useState('available');
 
   // Selection state
   const [selectedId, setSelectedId] = useState(isDark ? 'platea_preferencial_baja' : 'platea_san_martin_alta');
@@ -39,11 +41,11 @@ export const TuTicketPurchase = () => {
     }
   }, [isDark, hoveredId, selectedId, hasSeenSivori]);
 
-  // Ticking Platea Preferencial Baja status (sell out in real-time)
+  // Ticking Platea Preferencial Baja and others status (sell out in real-time)
   useEffect(() => {
     if (!isDark) return;
 
-    const timer = setTimeout(() => {
+    const timer1 = setTimeout(() => {
       setPrefBajaSpots(0);
       setPrefBajaStatus('soldout');
       // If user had it selected and it sold out, reset selection
@@ -52,7 +54,25 @@ export const TuTicketPurchase = () => {
       }
     }, 3000);
 
-    return () => clearTimeout(timer);
+    const timer2 = setTimeout(() => {
+      setSanMartinStatus('soldout');
+      if (selectedId === 'platea_san_martin_alta') {
+        setSelectedId(null);
+      }
+    }, 5500); // Se agota la barata
+
+    const timer3 = setTimeout(() => {
+      setVisionLateralStatus('soldout');
+      if (selectedId === 'platea_pref_vision_lateral') {
+        setSelectedId(null);
+      }
+    }, 8000); // Se agota otra más
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
   }, [selectedId, isDark]);
 
   const sections = [
@@ -76,7 +96,7 @@ export const TuTicketPurchase = () => {
     },
     { id: 'platea_preferencial_media', name: 'Platea Preferencial Media', price: 95000, status: 'available', color: 'bg-sky-400' },
     { id: 'platea_preferencial_alta', name: 'Platea Preferencial Alta', price: 90000, status: 'available', color: 'bg-sky-400' },
-    { id: 'platea_pref_vision_lateral', name: 'Platea Pref. Visión lateral', price: 97000, status: 'available', color: 'bg-blue-600' },
+    { id: 'platea_pref_vision_lateral', name: 'Platea Pref. Visión lateral', price: 97000, status: visionLateralStatus, color: 'bg-blue-600' },
     { id: 'sivori_media', name: 'Sivori Media', price: 80000, status: 'available', color: 'bg-pink-400' },
     {
       id: 'centenario_media_vision_restringida',
@@ -93,7 +113,7 @@ export const TuTicketPurchase = () => {
       color: 'bg-purple-600',
     },
     { id: 'platea_belgrano_alta', name: 'Platea Belgrano Alta', price: 50000, status: 'soldout', color: 'bg-amber-400' },
-    { id: 'platea_san_martin_alta', name: 'Platea San Martin Alta', price: 50000, status: 'available', color: 'bg-amber-400' },
+    { id: 'platea_san_martin_alta', name: 'Platea San Martin Alta', price: 50000, status: sanMartinStatus, color: 'bg-amber-400' },
   ];
 
   const sortedSections = isDark
