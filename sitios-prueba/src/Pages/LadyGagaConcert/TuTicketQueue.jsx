@@ -18,7 +18,7 @@ export const TuTicketQueue = () => {
     localStorage.removeItem('tuticket_timer_start');
     localStorage.removeItem('tuticket_expired');
 
-    const totalDuration = isDark ? 8000 : 1500; // Shorter wait time for white version
+    const totalDuration = isDark ? 15000 : 3000; // Shorter wait time for white version
     const intervalTime = 100; // updates every 100ms
     const totalSteps = totalDuration / intervalTime;
     let step = 0;
@@ -154,7 +154,7 @@ export const TuTicketQueue = () => {
                 <div>
                   <h4 className="text-sm font-bold text-red-300">Límite de tiempo estricto</h4>
                   <p className="text-xs text-neutral-400 mt-1">
-                    Al entrar solo tendrás <strong className="text-white">5 minutos</strong> para realizar la compra. ¡Muchos usuarios están esperando y no podemos perder el tiempo!
+                    Al entrar solo tendrás <strong className="text-white">2 minutos</strong> para realizar la compra. ¡Muchos usuarios están esperando y no podemos perder el tiempo!
                   </p>
                 </div>
               </div>

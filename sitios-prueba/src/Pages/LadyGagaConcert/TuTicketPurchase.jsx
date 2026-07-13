@@ -12,6 +12,7 @@ export const TuTicketPurchase = () => {
 
   // Scarcity state
   const [sivoriSpots, setSivoriSpots] = useState(3);
+  const [hasSeenSivori, setHasSeenSivori] = useState(false);
   const [prefBajaStatus, setPrefBajaStatus] = useState('available'); // will become 'soldout'
   const [prefBajaSpots, setPrefBajaSpots] = useState(1);
 
@@ -21,23 +22,22 @@ export const TuTicketPurchase = () => {
   const [showTshirtModal, setShowTshirtModal] = useState(false);
   const [selectedTicketInfo, setSelectedTicketInfo] = useState(null);
 
-  // Ticking Sivori Alta spots
+  // Ticking Sivori Alta spots (Dynamic Scarcity)
   useEffect(() => {
     if (!isDark) return;
 
-    const timer1 = setTimeout(() => {
-      setSivoriSpots(2);
-    }, 5000);
+    if ((hoveredId === 'sivori_alta' || selectedId === 'sivori_alta') && !hasSeenSivori) {
+      setHasSeenSivori(true);
 
-    const timer2 = setTimeout(() => {
-      setSivoriSpots(1);
-    }, 10000);
+      setTimeout(() => {
+        setSivoriSpots(2);
+      }, 1500);
 
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [isDark]);
+      setTimeout(() => {
+        setSivoriSpots(1);
+      }, 3500);
+    }
+  }, [isDark, hoveredId, selectedId, hasSeenSivori]);
 
   // Ticking Platea Preferencial Baja status (sell out in real-time)
   useEffect(() => {
@@ -97,7 +97,11 @@ export const TuTicketPurchase = () => {
   ];
 
   const sortedSections = isDark
-    ? [...sections].sort((a, b) => b.price - a.price)
+    ? [...sections].sort((a, b) => {
+        if (a.id === 'sivori_alta') return -1;
+        if (b.id === 'sivori_alta') return 1;
+        return b.price - a.price;
+      })
     : [...sections].sort((a, b) => a.price - b.price);
 
   const handleSelectSection = (id) => {

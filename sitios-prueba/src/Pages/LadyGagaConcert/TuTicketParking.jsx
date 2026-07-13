@@ -78,6 +78,30 @@ export const TuTicketParking = () => {
       review: isDark ? '“Espacio bastante amplio y cámaras de seguridad funcionando.”' : 'Estacionamiento abierto.',
     },
     {
+      id: 'parking_vip2',
+      name: 'Garage Estadio - VIP 2',
+      price: 32000,
+      review: isDark ? '“Literalmente al lado de la puerta, muy cómodo para salir rápido.”' : 'Garage VIP cercano.',
+    },
+    {
+      id: 'parking_nunez',
+      name: 'Garage Techado - Nuñez',
+      price: 24000,
+      review: isDark ? '“Las plazas son algo chicas, pero la atención es buena.”' : 'Garage cerrado.',
+    },
+    {
+      id: 'parking_sur',
+      name: 'Estacionamiento Sur - Calle paralela',
+      price: 18000,
+      review: isDark ? '“Cuidado con los trapitos en la zona, pero el lugar en sí está bien.”' : 'Estacionamiento en calle paralela.',
+    },
+    {
+      id: 'parking_plaza',
+      name: 'Estacionamiento La Plaza',
+      price: 16500,
+      review: isDark ? '“Súper económico pero a veces se inunda si llueve mucho.”' : 'Estacionamiento económico.',
+    },
+    {
       id: 'parking_g',
       name: 'Estacionamiento Municipal - Bajo Viaducto (Alcorta)',
       price: 15000,

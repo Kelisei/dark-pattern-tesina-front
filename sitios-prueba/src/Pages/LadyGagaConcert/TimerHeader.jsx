@@ -7,7 +7,7 @@ export const TimerHeader = () => {
   const enabledParam = searchParams.get('enabled') === 'true' ? 'true' : 'false';
   const isDark = enabledParam === 'true';
 
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
 
   useEffect(() => {
     if (!isDark) return;
@@ -20,7 +20,7 @@ export const TimerHeader = () => {
 
     const interval = setInterval(() => {
       const elapsedSeconds = Math.floor((Date.now() - parseInt(startTimestamp, 10)) / 1000);
-      const remaining = 300 - elapsedSeconds;
+      const remaining = 120 - elapsedSeconds;
 
       if (remaining <= 0) {
         clearInterval(interval);
@@ -57,7 +57,7 @@ export const TimerHeader = () => {
     progressColor = 'bg-red-500';
   }
 
-  const percentage = (timeLeft / 300) * 100;
+  const percentage = (timeLeft / 120) * 100;
 
   return (
     <div className="w-full bg-neutral-950 border-b border-neutral-900 sticky top-0 z-50 shadow-md">
